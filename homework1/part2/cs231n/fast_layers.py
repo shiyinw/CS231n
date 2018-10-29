@@ -1,5 +1,7 @@
 from __future__ import print_function
 import numpy as np
+import sys
+sys.path.append("/Users/sherilynw/Desktop/3_1/人工智能：原理与技术/CS231n/homework1/part2/")
 try:
     from cs231n.im2col_cython import col2im_cython, im2col_cython
     from cs231n.im2col_cython import col2im_6d_cython
@@ -46,8 +48,8 @@ def conv_forward_strides(x, w, b, conv_param):
     stride, pad = conv_param['stride'], conv_param['pad']
 
     # Check dimensions
-    #assert (W + 2 * pad - WW) % stride == 0, 'width does not work'
-    #assert (H + 2 * pad - HH) % stride == 0, 'height does not work'
+    assert (W + 2 * pad - WW) % stride == 0, 'width does not work'
+    assert (H + 2 * pad - HH) % stride == 0, 'height does not work'
 
     # Pad the input
     p = pad

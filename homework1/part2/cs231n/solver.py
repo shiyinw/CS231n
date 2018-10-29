@@ -4,9 +4,10 @@ standard_library.install_aliases()
 from builtins import range
 from builtins import object
 import os
-import pickle as pickle
 
+import pickle as pickle
 import numpy as np
+import time
 
 from cs231n import optim
 
@@ -261,14 +262,14 @@ class Solver(object):
         num_train = self.X_train.shape[0]
         iterations_per_epoch = max(num_train // self.batch_size, 1)
         num_iterations = self.num_epochs * iterations_per_epoch
-
+        start_time = time.time()
         for t in range(num_iterations):
             self._step()
 
             # Maybe print training loss
             if self.verbose and t % self.print_every == 0:
-                print('(Iteration %d / %d) loss: %f' % (
-                       t + 1, num_iterations, self.loss_history[-1]))
+                print('(Iteration %d / %d) loss: %f; time:%f' % (
+                       t + 1, num_iterations, self.loss_history[-1], time.time()-start_time))
 
             # At the end of every epoch, increment the epoch counter and decay
             # the learning rate.
@@ -292,8 +293,8 @@ class Solver(object):
                 self._save_checkpoint()
 
                 if self.verbose:
-                    print('(Epoch %d / %d) train acc: %f; val_acc: %f' % (
-                           self.epoch, self.num_epochs, train_acc, val_acc))
+                    print('(Epoch %d / %d) train acc: %f; val_acc: %f ; time: %f' % (
+                           self.epoch, self.num_epochs, train_acc, val_acc, time.time()-start_time))
 
                 # Keep track of the best model
                 if val_acc > self.best_val_acc:

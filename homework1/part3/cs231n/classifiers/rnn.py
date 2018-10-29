@@ -1,6 +1,8 @@
 from builtins import range
 from builtins import object
 import numpy as np
+import sys
+sys.path.append("/Users/sherilynw/Desktop/3_1/人工智能：原理与技术/CS231n/homework1/part3/")
 
 from cs231n.layers import *
 from cs231n.rnn_layers import *
@@ -137,6 +139,38 @@ class CaptioningRNN(object):
         # defined above to store loss and gradients; grads[k] should give the      #
         # gradients for self.params[k].                                            #
         ############################################################################
+
+        # forward
+        hidden_states, affine_cache = affine_forward(features ,W_proj, b_proj)
+
+        word_embedding, embd_cache = word_embedding_forward(captions_in, W_embed)
+
+        if self.cell_type == 'rnn':
+            sequence, sequence_cache = rnn_forward(word_embedding, hidden_states, Wx, Wh, b)
+        elif self.cell_type == 'lstm':
+            sequence, sequence_cache = lstm_forward(word_embedding, hidden_states, Wx, Wh, b)
+        else:
+            raise ValueError('Invalid cell_type "%s"' % self.cell_type)
+
+        temporal_affine_out, temporal_cache = temporal_affine_forward(sequence, W_vocab, b_vocab)
+
+        # loss
+
+        loss, dx = temporal_softmax_loss(temporal_affine_out, captions_out, mask)
+
+        # backward
+
+        dx, grads["W_vocab"], grads["b_vocab"] = temporal_affine_backward(dx, temporal_cache)
+        if self.cell_type == 'rnn':
+            dembd, dhidden, grads["Wx"], grads["Wh"], grads["b"] = rnn_backward(dx, sequence_cache)
+        elif self.cell_type == 'lstm':
+            dembd, dhidden, grads["Wx"], grads["Wh"], grads["b"] = lstm_backward(dx, sequence_cache)
+        else:
+            raise ValueError('Invalid cell_type "%s"' % self.cell_type)
+
+        _, grads["W_proj"], grads["b_proj"] = affine_backward(dhidden, affine_cache)
+        grads["W_embed"] = word_embedding_backward(dembd, embd_cache)
+
         pass
         ############################################################################
         #                             END OF YOUR CODE                             #
@@ -199,7 +233,33 @@ class CaptioningRNN(object):
         # functions; you'll need to call rnn_step_forward or lstm_step_forward in #
         # a loop.                                                                 #
         ###########################################################################
-        pass
+
+        # find the most likely captions to return
+        N, D = features.shape
+        hidden_states, affine_cache = affine_forward(features, W_proj, b_proj)
+
+        prev_word_idx = [self._start] * N
+        prev_h = hidden_states
+        prev_c = np.zeros(prev_h.shape)
+        captions[:, 0] = self._start
+        for i in np.arange(1, max_length, 1):
+            prev_word_embed = W_embed[prev_word_idx]
+            if self.cell_type == 'rnn':
+                next_h, rnn_step_cache = rnn_step_forward(prev_word_embed, prev_h, Wx, Wh, b)
+            elif self.cell_type == 'lstm':
+                next_h, next_c, lstm_step_cache = lstm_step_forward(prev_word_embed, prev_h, prev_c, Wx, Wh, b)
+                prev_c = next_c
+            else:
+                raise ValueError('Invalid cell_type "%s"' % self.cell_type)
+            vocab_affine_out, vocab_affine_out_cache = affine_forward(next_h, W_vocab, b_vocab)
+            captions[:, i] = list(np.argmax(vocab_affine_out, axis=1))
+            prev_word_idx = captions[:, i]
+            prev_h = next_h
+
+            # test whether to stop
+            if(self._end in captions[:, i]):
+                return captions
+
         ############################################################################
         #                             END OF YOUR CODE                             #
         ############################################################################

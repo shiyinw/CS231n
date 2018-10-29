@@ -1,5 +1,9 @@
 from __future__ import print_function
 
+import sys
+project_dir = "/Users/sherilynw/Desktop/3_1/人工智能：原理与技术/CS231n/homework1/part2/"
+sys.path.append(project_dir)
+
 from builtins import range
 from six.moves import cPickle as pickle
 import numpy as np
@@ -17,7 +21,7 @@ def load_pickle(f):
 
 def load_CIFAR_batch(filename):
     """ load single batch of cifar """
-    with open(filename, 'rb') as f:
+    with open(project_dir + filename, 'rb') as f:
         datadict = load_pickle(f)
         X = datadict['data']
         Y = datadict['labels']

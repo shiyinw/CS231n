@@ -1,6 +1,8 @@
 from __future__ import print_function
 
 import numpy as np
+import sys
+sys.path.append('/Users/sherilynw/Desktop/3_1/人工智能：原理与技术/CS231n/homework1/part1/')
 from cs231n.classifiers.linear_svm import *
 from cs231n.classifiers.softmax import *
 from past.builtins import xrange
@@ -53,6 +55,9 @@ class LinearClassifier(object):
       # Hint: Use np.random.choice to generate indices. Sampling with         #
       # replacement is faster than sampling without replacement.              #
       #########################################################################
+      batch_index = np.random.choice(num_train, num_classes, replace=False)
+      X_batch = X[batch_index]
+      y_batch = y[batch_index]
       pass
       #########################################################################
       #                       END OF YOUR CODE                                #
@@ -67,12 +72,13 @@ class LinearClassifier(object):
       # TODO:                                                                 #
       # Update the weights using the gradient and the learning rate.          #
       #########################################################################
+      self.W -= learning_rate * grad
       pass
       #########################################################################
       #                       END OF YOUR CODE                                #
       #########################################################################
 
-      if verbose and it % 100 == 0:
+      if verbose and it % 1000 == 0:
         print('iteration %d / %d: loss %f' % (it, num_iters, loss))
 
     return loss_history
@@ -96,6 +102,7 @@ class LinearClassifier(object):
     # TODO:                                                                   #
     # Implement this method. Store the predicted labels in y_pred.            #
     ###########################################################################
+    y_pred = np.argmax(X.dot(self.W), axis=1)
     pass
     ###########################################################################
     #                           END OF YOUR CODE                              #
@@ -127,9 +134,26 @@ class LinearSVM(LinearClassifier):
     return svm_loss_vectorized(self.W, X_batch, y_batch, reg)
 
 
+
 class Softmax(LinearClassifier):
   """ A subclass that uses the Softmax + Cross-entropy loss function """
 
   def loss(self, X_batch, y_batch, reg):
     return softmax_loss_vectorized(self.W, X_batch, y_batch, reg)
 
+
+if __name__ == "__main__":
+  from cs231n.classifiers import LinearSVM
+  import time
+  import pickle
+  (X_train, y_train) = pickle.load(open("svm_dev.pickle", 'rb'))  # development data actually
+  svm = LinearSVM()
+  tic = time.time()
+  loss_hist = svm.train(X_train, y_train, learning_rate=1e-7, reg=2.5e4,
+                        num_iters=1500, verbose=True)
+  toc = time.time()
+  print('That took %fs' % (toc - tic))
+
+  y_train_pred = svm.predict(X_train)
+  print(y_train_pred)
+  print('training accuracy: %f' % (np.mean(y_train == y_train_pred),))

@@ -1,7 +1,17 @@
 from distutils.core import setup
 from distutils.extension import Extension
-from Cython.Build import cythonize
 import numpy
+import sys
+sys.path.append("/usr/local/bin/")
+print(sys.path)
+
+try:
+    from Cython.Build import cythonize
+except ImportError:
+     def cythonize(*args, **kwargs):
+         from Cython.Build import cythonize
+         return cythonize(*args, **kwargs)
+
 
 extensions = [
   Extension('im2col_cython', ['im2col_cython.pyx'],
